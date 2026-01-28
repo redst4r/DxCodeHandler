@@ -1,26 +1,40 @@
 import json
 from six import string_types
+from pathlib import Path
+import os
+
 
 class ICD9:
     """
     The ICD9 class captures the hierarchy and descriptions for the ICD9 coding standard
     The source data files were developed from CMS mapping files
     """
+
     def __init__(self, errorHandle="NoDx"):
-        '''
+        """
         Loads the dependancies for the ICD9 class
         All the mapping data is stored in JSON files which are loaded into dicts
-        '''
-        import os
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+        """
+
+        dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
+        icd9_path = dir_path / "DxCodeHandler data/icd9"
         self.errorHandle = errorHandle
 
-        self.__descriptions = json.load(open(dir_path + '/DxCodeHandler data/icd9/descriptions5.json'))
-        self.__descendants = json.load(open(dir_path + '/DxCodeHandler data/icd9/descendants2.json'))
-        self.__children = json.load(open(dir_path +   '/DxCodeHandler data/icd9/children.json'))
-        self.__parents = json.load(open(dir_path +   '/DxCodeHandler data/icd9/parents2.json'))
-        self.__depths = json.load(open(dir_path +   '/DxCodeHandler data/icd9/depths2.json'))
-
+        with open(icd9_path / "descriptions5.json", 'r') as fh:
+            self.__descriptions = json.load(fh)
+            
+        with open(icd9_path / "descendants2.json", 'r') as fh:
+            self.__descendants = json.load(fh)
+            
+        with open(icd9_path / "children.json", 'r') as fh:
+            self.__children = json.load(fh)
+            
+        with open(icd9_path / "parents2.json", 'r') as fh:
+            self.__parents = json.load(fh)
+            
+        with open(icd9_path / "depths2.json", 'r') as fh:
+            self.__depths = json.load(fh)
+            
 
     """
     handles how the program responsed to codes that don't exist
@@ -32,37 +46,37 @@ class ICD9:
     "false" - returns a boolean false
     if all else fails, this will raise and Exception
     """
+
     def handleError(self, code):
         if self.errorHandle == "NoDx":
             return "NoDx"
         elif self.errorHandle == "ThrowError":
-            raise Exception('%s is not an ICD9 code' % code)
+            raise Exception("%s is not an ICD9 code" % code)
         elif self.errorHandle == "None":
             return None
         elif self.errorHandle == "false":
-            return false
+            return False
         elif isinstance(self.errorHandle, string_types):
             return self.errorHandle
         else:
             return "NoDx"
 
-
-    '''
+    """
     returns all codes in the icd9 hierarchy
     Input: None
     Returns: <list>
-    '''
+    """
+
     def getAllCodes(self):
         return set(self.__depths.keys())
 
-
-    '''
+    """
     Identifies the input string as a valid icd9 code or not.
     Input: <string> any string
     Returns: <boolean>
-    '''
-    def isCode(self, code):
+    """
 
+    def isCode(self, code):
         # convert input to string and uppercase
         code = str(code).upper()
 
@@ -73,28 +87,27 @@ class ICD9:
         except KeyError:
             return False
 
-
     """
     Input: <string> any icd9 code
     Returns: <string> the parent of the input icd9 code or null if no parent exists
     """
-    def parent(self, codes):
 
-        #throws exception if input not a string or a list
+    def parent(self, codes):
+        # throws exception if input not a string or a list
         if not isinstance(codes, string_types) and not isinstance(codes, list):
-            raise Exception('ICD9.parent() input must be string or list')
+            raise Exception("ICD9.parent() input must be string or list")
 
         output = []
-        #checks if input is list
+        # checks if input is list
         if isinstance(codes, list):
             for i in codes:
-                #retrieve parent of code
+                # retrieve parent of code
                 output.append(self.__parent(i))
 
-            #removes all NoneTypes from list
+            # removes all NoneTypes from list
             output = [m for m in output if m]
 
-            #removes duplicates from list
+            # removes duplicates from list
             output = list(set(output))
 
             if len(output) > 0:
@@ -102,41 +115,38 @@ class ICD9:
             else:
                 return None
         else:
-            #returns the parent of the input if not list
+            # returns the parent of the input if not list
             return self.__parent(codes)
 
-
     def __parent(self, code):
-
-        #throws exception of input code is not a valid code
+        # throws exception of input code is not a valid code
         if not self.isCode(code):
             return self.handleError(code)
 
         code = code.upper()
 
-        #attempts to retrieve parent code from parent dictionary
+        # attempts to retrieve parent code from parent dictionary
         try:
             return self.__parents[code]
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> a list of children of the input icd9 code or null if no children exist
     """
-    def children(self, code):
 
+    def children(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD9.children() input must be string or list')
+            raise Exception("ICD9.children() input must be string or list")
 
         temp = []
 
         # checks if input is list
-        if type(code) == list:
+        if isinstance(code, list):
             for i in code:
-                #retrieve child of code
+                # retrieve child of code
                 temp += self.__getChildren(i)
         else:
             temp += self.__getChildren(code)
@@ -144,7 +154,6 @@ class ICD9:
         return temp
 
     def __getChildren(self, code):
-
         # throws exception if code not a valid icd9 code
         if not self.isCode(code):
             return self.handleError(code)
@@ -156,31 +165,29 @@ class ICD9:
         except KeyError:
             return [None]
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> a list of all the descendants from the input code or null if no descendants exist
     """
+
     def descendants(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD9.descendants() input must be string or list')
+            raise Exception("ICD9.descendants() input must be string or list")
 
         temp = []
 
         # checks if input is list
-        if type(code) == list:
+        if isinstance(code, list):
             for i in code:
-                #retrieve child of code
+                # retrieve child of code
                 temp += self.__getDescendants(i)
         else:
             temp += self.__getDescendants(code)
 
         return temp
 
-
     def __getDescendants(self, code):
-
         # throws exception if code is not a valid icd9 code
         if not self.isCode(code):
             return self.handleError(code)
@@ -192,18 +199,17 @@ class ICD9:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> the depth in the icd9 hierarchy the input code is at
     """
-    def depth(self, code):
 
+    def depth(self, code):
         # throws exception if input not a string
         if not isinstance(code, string_types):
-            raise Exception('ICD9.depth() input must be string')
+            raise Exception("ICD9.depth() input must be string")
 
-        #throws exception if input code is not valid icd9 code
+        # throws exception if input code is not valid icd9 code
         if not self.isCode(code):
             return self.handleError(code)
 
@@ -214,17 +220,15 @@ class ICD9:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <string> The official description of the input icd9 code or null if no children exist
     """
-    def description(self, code):
 
+    def description(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD9.description() input must be string or list')
-
+            raise Exception("ICD9.description() input must be string or list")
 
         # throws exception if input code is not a valid icd9 code
         if not self.isCode(code):
@@ -237,7 +241,6 @@ class ICD9:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
             <int> the depth of the lowest parent you'd like to return
@@ -245,24 +248,22 @@ class ICD9:
     """
 
     def abstract(self, code, depth):
-
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD9.abstract() code input must be string or list')
+            raise Exception("ICD9.abstract() code input must be string or list")
 
         # throws exception if requested depth is not an integer
         try:
             depth = int(depth)
         except ValueError:
-            raise Exception('ICD9.abstract() depth input must be integer')
+            raise Exception("ICD9.abstract() depth input must be integer")
 
         if not isinstance(depth, int):
-            raise Exception('ICD9.abstract() depth input must be integer')
-
+            raise Exception("ICD9.abstract() depth input must be integer")
 
         temp = []
 
-        #checks whether code is list
+        # checks whether code is list
         if isinstance(code, list):
             for i in code:
                 temp.append(self.__abstract(i, depth))
@@ -271,10 +272,8 @@ class ICD9:
 
         return list(temp)
 
-
     def __abstract(self, code, depth):
-
-        #throws exception if code is not a valid icd9 code
+        # throws exception if code is not a valid icd9 code
         if not self.isCode(code):
             return self.handleError(code)
 
@@ -288,23 +287,22 @@ class ICD9:
             cur_depth = self.__depths[code]
         return code
 
-
     """
     Input: <string> any icd9 code
     Return: <list> all icd9 codes between the input icd9 code and the highest parent in the hierarchy
     """
-    def ancestors(self, code):
 
+    def ancestors(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD9.ancestors() input must be string or list')
+            raise Exception("ICD9.ancestors() input must be string or list")
 
         codes = []
 
-        #checks whether code is list
+        # checks whether code is list
         if isinstance(code, list):
             for i in code:
-                #collects ancestor codes
+                # collects ancestor codes
                 codes += self.__ancestors(i)
             return codes
         else:
@@ -328,12 +326,10 @@ class ICD9:
             codes.append(code)
         return list(reversed(codes))
 
-
-
     def isLeafNode(self, code):
         code = str(code).upper()
         if not self.isCode(code):
-            #return self.handleError(code)
+            # return self.handleError(code)
             return False
 
         if len(self.children(code)) > 1:

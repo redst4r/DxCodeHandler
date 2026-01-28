@@ -1,3 +1,5 @@
 DxCodeHandler\ Data/.DS_Store
 /tests
 /edits
+.venv
+__pycache__

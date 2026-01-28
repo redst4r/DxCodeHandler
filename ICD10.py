@@ -1,18 +1,29 @@
 import json
 from six import string_types
+from pathlib import Path
+import os
 
 class ICD10:
-
     def __init__(self, errorHandle="NoDx"):
-        import os
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
+        icd10_path = dir_path / "DxCodeHandler data/icd10"
         self.errorHandle = errorHandle
 
-        self.__parents = json.load(open(dir_path + '/DxCodeHandler data/icd10/parents.json'))
-        self.__depths = json.load(open(dir_path + '/DxCodeHandler data/icd10/depths.json'))
-        self.__descriptions = json.load(open(dir_path + '/DxCodeHandler data/icd10/descriptions.json'))
-        self.__descendants = json.load(open(dir_path + '/DxCodeHandler data/icd10/descendants.json'))
-        self.__children = json.load(open(dir_path + '/DxCodeHandler data/icd10/children.json'))
+        with open(icd10_path / "parents.json", 'r') as fh:
+            self.__parents = json.load(fh)
+
+        with open(icd10_path / "depths.json", 'r') as fh:
+            self.__depths = json.load(fh)
+
+        with open(icd10_path / "descriptions.json", 'r') as fh:
+            self.__descriptions = json.load(fh)
+
+        with open(icd10_path / "descendants.json", 'r') as fh:
+            self.__descendants = json.load(fh)
+
+        with open(icd10_path / "children.json", 'r') as fh:
+            self.__children = json.load(fh)
 
 
     """
@@ -25,25 +36,24 @@ class ICD10:
     "false" - returns a boolean false
     if all else fails, this will raise and Exception
     """
+
     def handleError(self, code):
         if self.errorHandle == "NoDx":
             return "NoDx"
         elif self.errorHandle == "ThrowError":
-            raise Exception('%s is not an ICD10 code' % code)
+            raise Exception("%s is not an ICD10 code" % code)
         elif self.errorHandle == "None":
             return None
         elif self.errorHandle == "false":
-            return false
+            return False
         elif isinstance(self.errorHandle, string_types):
             return self.errorHandle
         else:
             return "NoDx"
 
-
     def getAllCodes(self):
         output = set(self.__depths.keys())
         return output
-
 
     def isCode(self, codes):
         output = []
@@ -63,21 +73,20 @@ class ICD10:
             except KeyError:
                 return False
 
-        if len(output)==len(codes):
+        if len(output) == len(codes):
             return True
         else:
             return False
-
 
     """
     Input: <string> any icd9 code
     Returns: <string> the parent of the input icd9 code or null if no parent exists
     """
-    def parent(self, codes):
 
+    def parent(self, codes):
         # throws exception if input not a string or a list
         if not isinstance(codes, string_types) and not isinstance(codes, list):
-            raise Exception('ICD10.parent() input must be string or list')
+            raise Exception("ICD10.parent() input must be string or list")
 
         output = []
 
@@ -94,7 +103,6 @@ class ICD10:
             return self.__parent(codes)
 
     def __parent(self, code):
-
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
             return self.handleError(code)
@@ -105,19 +113,18 @@ class ICD10:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> a list of children of the input icd9 code or null if no children exist
     """
-    def children(self, code):
 
+    def children(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD10.children() input must be string or list')
+            raise Exception("ICD10.children() input must be string or list")
 
         temp = []
-        if type(code) == list:
+        if isinstance(code, list):
             for i in code:
                 temp += self.__getChildren(i)
         else:
@@ -125,9 +132,7 @@ class ICD10:
 
         return temp
 
-
     def __getChildren(self, code):
-
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
             return self.handleError(code)
@@ -138,16 +143,15 @@ class ICD10:
         except KeyError:
             return [None]
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> a list of all the descendants from the input code or null if no descendants exist
     """
-    def descendants(self, code):
 
+    def descendants(self, code):
         # throws exception if input not a string
         if not isinstance(code, string_types):
-            raise Exception('ICD10.descendants() input must be string')
+            raise Exception("ICD10.descendants() input must be string")
 
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
@@ -161,21 +165,19 @@ class ICD10:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <list> the depth in the icd9 hierarchy the input code is at
     """
-    def depth(self, code):
 
+    def depth(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types):
-            raise Exception('ICD10.depth() input must be string')
+            raise Exception("ICD10.depth() input must be string")
 
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
             return self.handleError(code)
-
 
         code = code.upper()
         try:
@@ -183,24 +185,21 @@ class ICD10:
         except KeyError:
             return None
 
-
     """
     Input: <string> any icd9 code
     Returns: <string> The official description of the input icd9 code or null if no children exist
     """
-    
+
     def description(self, code):
-    
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
             return self.handleError(code)
-    
+
         code = code.upper()
         try:
             return self.__descriptions[code]
         except KeyError:
             return None
-    
 
     """
     Input: <string> any icd9 code
@@ -209,24 +208,21 @@ class ICD10:
     """
 
     def abstract(self, code, depth):
-
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD10.abstract() input must be string or list')
-
+            raise Exception("ICD10.abstract() input must be string or list")
 
         # throws exception if requested depth is not an integer
         try:
             depth = int(depth)
         except ValueError:
-            raise Exception('ICD10.abstract() depth input must be integer')
+            raise Exception("ICD10.abstract() depth input must be integer")
 
         if not isinstance(depth, int):
-            raise Exception('ICD10.abstract() depth input must be integer')
-
+            raise Exception("ICD10.abstract() depth input must be integer")
 
         temp = []
-        if type(code)==list:
+        if isinstance(code, list):
             for i in code:
                 temp.append(self.__abstract(i, depth))
         else:
@@ -234,9 +230,7 @@ class ICD10:
 
         return list(temp)
 
-
     def __abstract(self, code, depth):
-
         # throws exception if code is not a valid icd10 code
         if not self.isCode(code):
             return self.handleError(code)
@@ -248,19 +242,18 @@ class ICD10:
             cur_depth = self.__depths[code]
         return code
 
-
     """
     Input: <string> any icd9 code
     Return: <list> all icd9 codes between the input icd9 code and the highest parent in the hierarchy
     """
-    def ancestors(self, code):
 
+    def ancestors(self, code):
         # throws exception if input not a string or a list
         if not isinstance(code, string_types) and not isinstance(code, list):
-            raise Exception('ICD10.ancestors() input must be string or list')
+            raise Exception("ICD10.ancestors() input must be string or list")
 
         codes = []
-        if type(code) == list:
+        if isinstance(code, list):
             for i in code:
                 codes += self.__ancestors(i)
             return codes
@@ -281,7 +274,6 @@ class ICD10:
             cur_depth = self.__depths[code]
             codes.append(code)
         return list(reversed(codes))
-
 
     def isLeafNode(self, code):
         code = str(code).upper()
