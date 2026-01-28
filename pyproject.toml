@@ -1,0 +1,9 @@
+[project]
+name = "dxcodehandler"
+version = "0.1.0"
+description = "This package has a collection of modules for working with clinical data from the University of Washington Medical Center, specifically billing codes."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "six"
+]
