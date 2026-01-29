@@ -1,5 +1,7 @@
 DxCodeHandler\ Data/.DS_Store
 /tests
 /edits
-.venv
-__pycache__
+/.venv
+/__pycache__
+/build
+*.egg-info

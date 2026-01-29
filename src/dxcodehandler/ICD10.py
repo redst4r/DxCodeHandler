@@ -7,7 +7,7 @@ class ICD10:
     def __init__(self, errorHandle="NoDx"):
 
         dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
-        icd10_path = dir_path / "DxCodeHandler data/icd10"
+        icd10_path = dir_path / "data/icd10"
         self.errorHandle = errorHandle
 
         with open(icd10_path / "parents.json", 'r') as fh:

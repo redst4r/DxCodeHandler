@@ -7,7 +7,7 @@ class Converter:
     def __init__(self):
 
         dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
-        data_path = dir_path / "DxCodeHandler data"
+        data_path = dir_path / "data"
         """
         Load all our known ICD10 codes into a set for cross reference
         """

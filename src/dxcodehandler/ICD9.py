@@ -17,7 +17,7 @@ class ICD9:
         """
 
         dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
-        icd9_path = dir_path / "DxCodeHandler data/icd9"
+        icd9_path = dir_path / "data/icd9"
         self.errorHandle = errorHandle
 
         with open(icd9_path / "descriptions5.json", 'r') as fh:
